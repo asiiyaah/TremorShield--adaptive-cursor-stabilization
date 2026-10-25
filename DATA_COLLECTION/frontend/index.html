@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>TREMORSHIELD Data Collection</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div id="screen-login" class="screen">
+  <div class="card intro-card">
+    <h1>TREMORSHIELD</h1>
+    <p class="sub">Mouse movement data collection</p>
+    <div class="intro">
+      <p><strong>Please use a mouse only during the tasks.</strong></p>
+      <p>Do not use the keyboard, keypad, touchpad, touchscreen, or another pointing device.</p>
+      <p>We collect mouse X/Y position, movement, speed, acceleration, clicks, and task information.</p>
+      <p>There are 9 tasks. Each task lasts 30 seconds.</p>
+      <p>The task time is 4 minutes 30 seconds. Allow about 5–7 minutes including instructions.</p>
+      <p>Your data is sent securely to the study server when the session is complete.</p>
+    </div>
+    <label>Participant Name<input id="userId" type="text" placeholder="Enter your Name" /></label>
+    <label>Session number<input id="sessionId" type="number" value="1" min="1" /></label>
+    <button id="beginBtn">Begin Session</button>
+    <p class="hint">Stay in this tab for the whole session.</p>
+  </div>
+</div>
+
+<div id="screen-instructions" class="screen hidden">
+  <div class="card">
+    <h2 id="instr-title"></h2>
+    <pre id="instr-body"></pre>
+    <button id="startTaskBtn">Start Task</button>
+    <p class="hint">Use the mouse only during the task.</p>
+  </div>
+</div>
+
+<div id="screen-task" class="screen hidden">
+  <canvas id="stage"></canvas>
+  <div id="hud"><span id="hud-task"></span> — <span id="hud-time"></span>s remaining</div>
+</div>
+
+<div id="screen-done" class="screen hidden">
+  <div class="card">
+    <h2>Session complete</h2>
+    <p id="done-msg">Saving your data…</p>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

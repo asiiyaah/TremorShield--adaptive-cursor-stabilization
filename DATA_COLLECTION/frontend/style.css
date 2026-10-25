@@ -1,0 +1,18 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; font-family: -apple-system, Arial, sans-serif; background: #fff; overflow: hidden; }
+.screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+.hidden { display: none !important; }
+.card { max-width: 620px; padding: 32px 36px; text-align: center; }
+.card h1 { margin: 0 0 4px; font-size: 28px; }
+.card h2 { margin: 0 0 12px; font-size: 24px; }
+.sub { color: #666; margin: 0 0 24px; }
+.card label { display: block; text-align: left; margin: 12px 0; font-size: 14px; color: #333; }
+.card input { width: 100%; padding: 8px 10px; font-size: 15px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; }
+.card button { margin-top: 20px; padding: 10px 24px; font-size: 16px; border: none; border-radius: 6px; background: #2563eb; color: white; cursor: pointer; }
+.card button:hover { background: #1d4ed8; }
+.hint { color: #888; font-size: 13px; margin-top: 18px; }
+.intro { text-align: left; font-size: 14px; line-height: 1.45; color: #333; margin: 0 0 18px; }
+.intro p { margin: 7px 0; }
+#instr-body { white-space: pre-wrap; font-family: inherit; font-size: 20px; color: #222; }
+#stage { display: block; width: 100vw; height: 100vh; background: #fff; cursor: crosshair; }
+#hud { position: fixed; top: 14px; left: 18px; font-size: 13px; color: #555; background: rgba(255,255,255,0.85); padding: 4px 8px; border-radius: 4px; }
