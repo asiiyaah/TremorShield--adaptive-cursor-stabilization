@@ -11,7 +11,14 @@ data/final/*
 # Results
 results/*
 !results/.gitkeep
+# Model files
+models/robustpdx/*
+!models/robustpdx/
+!models/robustpdx/**
 
+# Exclude only training and testing feature CSVs
+models/robustpdx/train_ml_features.csv
+models/robustpdx/test_ml_features.csv
 # Python
 __pycache__/
 *.py[cod]

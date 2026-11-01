@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TREMORSHIELD — Adaptive Cursor Stabilization</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F0F2EC;
+    --panel:#E3E7DD;
+    --ink:#1B241F;
+    --ink-soft:#4B564E;
+    --line:#C6CCBC;
+    --steady:#2F6F62;
+    --steady-deep:#204F45;
+    --unsteady:#B8863A;
+    --white:#FBFCFA;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001s !important; transition-duration:0.001s !important;}
+  }
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:inherit;}
+  h1,h2,h3{font-family:'Fraunces', serif; margin:0; color:var(--ink); font-weight:500;}
+
+  .wrap{
+    max-width:1040px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px 0;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    font-family:'Fraunces', serif;
+    font-size:1.15rem;
+    font-weight:600;
+    letter-spacing:0.01em;
+  }
+  .brand small{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.65rem;
+    font-weight:400;
+    color:var(--ink-soft);
+  }
+  .topbar nav{
+    display:flex;
+    gap:28px;
+    font-size:0.9rem;
+    color:var(--ink-soft);
+  }
+  .topbar nav a{ text-decoration:none; }
+  .topbar nav a:hover{ color:var(--ink); }
+  .topbar nav a:focus-visible{ outline:2px solid var(--steady); outline-offset:3px; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding:64px 0 40px;
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:48px;
+    align-items:center;
+  }
+  .badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:var(--steady-deep);
+    background:rgba(47,111,98,0.1);
+    border:1px solid rgba(47,111,98,0.3);
+    padding:5px 10px;
+    border-radius:3px;
+    margin-bottom:22px;
+  }
+  .hero h1{
+    font-size:2.7rem;
+    line-height:1.12;
+    max-width:11ch;
+  }
+  .hero p.lede{
+    margin-top:20px;
+    font-size:1.08rem;
+    color:var(--ink-soft);
+    max-width:46ch;
+  }
+  .hero-ctas{
+    margin-top:32px;
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:0.92rem;
+    font-weight:500;
+    padding:12px 22px;
+    border-radius:4px;
+    border:1px solid transparent;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+  }
+  .btn-primary{
+    background:var(--steady);
+    color:var(--white);
+  }
+  .btn-primary:hover{ background:var(--steady-deep); }
+  .btn-ghost{
+    background:transparent;
+    border-color:var(--line);
+    color:var(--ink);
+  }
+  .btn-ghost:hover{ border-color:var(--ink-soft); }
+  .btn:focus-visible{ outline:2px solid var(--steady); outline-offset:2px; }
+
+  .hero-note{
+    margin-top:16px;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- Tremor -> steady line demo ---------- */
+  .demo-panel{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:24px 20px 18px;
+  }
+  .demo-panel svg{ width:100%; height:auto; display:block; }
+  .demo-caption{
+    display:flex;
+    justify-content:space-between;
+    margin-top:10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    color:var(--ink-soft);
+  }
+  .path-raw{
+    fill:none;
+    stroke:var(--unsteady);
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-dasharray:1000;
+    stroke-dashoffset:1000;
+    animation:draw 2.6s ease-out forwards;
+  }
+  .path-stable{
+    fill:none;
+    stroke:var(--steady);
+    stroke-width:2.5;
+    stroke-linecap:round;
+    stroke-dasharray:1000;
+    stroke-dashoffset:1000;
+    animation:draw 2.6s ease-out forwards;
+    animation-delay:0.15s;
+  }
+  @keyframes draw{
+    to{ stroke-dashoffset:0; }
+  }
+
+  /* ---------- Section shell ---------- */
+  section{ padding:56px 0; border-top:1px solid var(--line); }
+  .kicker{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  section h2{ font-size:1.7rem; max-width:20ch; }
+  section > .wrap > p.section-lede{
+    margin-top:14px;
+    color:var(--ink-soft);
+    max-width:58ch;
+    font-size:1rem;
+  }
+
+  /* ---------- Problem ---------- */
+  .problem-grid{
+    margin-top:32px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:24px;
+  }
+  .problem-card{
+    border-left:2px solid var(--line);
+    padding-left:16px;
+  }
+  .problem-card h3{ font-size:1.05rem; font-weight:600; }
+  .problem-card p{ color:var(--ink-soft); font-size:0.92rem; margin-top:8px; }
+
+  /* ---------- How it works ---------- */
+  .flow{
+    margin-top:36px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:0;
+    position:relative;
+  }
+  .flow-step{
+    padding:0 20px 0 0;
+    position:relative;
+  }
+  .flow-step:not(:last-child)::after{
+    content:"";
+    position:absolute;
+    top:11px;
+    right:-4px;
+    width:20px;
+    height:1px;
+    background:var(--line);
+  }
+  .flow-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    color:var(--steady-deep);
+    display:block;
+    margin-bottom:10px;
+  }
+  .flow-step h3{ font-size:1rem; font-weight:600; }
+  .flow-step p{ color:var(--ink-soft); font-size:0.9rem; margin-top:8px; }
+
+  /* ---------- Download / control mockup ---------- */
+  .control-layout{
+    margin-top:36px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:40px;
+    align-items:start;
+  }
+  .mock-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+
+  /* app window mockup */
+  .app-window{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    box-shadow:0 1px 0 var(--line);
+  }
+  .app-titlebar{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:10px 12px;
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem;
+    color:var(--ink-soft);
+  }
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--line); }
+  .app-body{ padding:24px 20px; }
+  .app-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .app-row h3{ font-size:1.02rem; font-weight:600; }
+  .app-row p{ font-size:0.85rem; color:var(--ink-soft); margin-top:4px; }
+  .status-line{
+    margin-top:18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    color:var(--ink-soft);
+  }
+  .status-value{ color:var(--steady-deep); font-weight:500; }
+  .status-value.off{ color:var(--unsteady); }
+
+  /* toggle switch */
+  .switch{
+    width:46px;
+    height:26px;
+    border-radius:13px;
+    background:var(--line);
+    position:relative;
+    cursor:pointer;
+    border:none;
+    padding:0;
+    flex-shrink:0;
+  }
+  .switch::after{
+    content:"";
+    position:absolute;
+    top:3px; left:3px;
+    width:20px; height:20px;
+    border-radius:50%;
+    background:var(--white);
+    transition:left 0.18s ease, background 0.18s ease;
+  }
+  .switch[aria-pressed="true"]{ background:var(--steady); }
+  .switch[aria-pressed="true"]::after{ left:23px; }
+  .switch:focus-visible{ outline:2px solid var(--steady); outline-offset:3px; }
+
+  /* taskbar mockup */
+  .taskbar{
+    background:var(--ink);
+    border-radius:8px;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .taskbar-left{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:#C9D0C6;
+  }
+  .tray{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .tray-icon{
+    width:30px; height:30px;
+    border-radius:6px;
+    background:var(--panel);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    border:1px solid transparent;
+    position:relative;
+  }
+  .tray-icon svg{ width:16px; height:16px; }
+  .tray-icon.on{ background:rgba(47,111,98,0.25); }
+  .tray-icon:focus-visible{ outline:2px solid var(--steady); outline-offset:2px; }
+  .tray-clock{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:#C9D0C6;
+  }
+  .tray-tooltip{
+    position:absolute;
+    bottom:38px;
+    right:0;
+    background:var(--white);
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:6px 10px;
+    font-size:0.72rem;
+    white-space:nowrap;
+    box-shadow:0 4px 10px rgba(0,0,0,0.12);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.15s ease;
+  }
+  .tray-icon:hover .tray-tooltip,
+  .tray-icon:focus-visible .tray-tooltip{ opacity:1; }
+
+  .mockup-note{
+    margin-top:14px;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- Status / honesty section ---------- */
+  .status-list{
+    margin-top:32px;
+    display:grid;
+    gap:0;
+  }
+  .status-row{
+    display:grid;
+    grid-template-columns:1fr 2fr;
+    gap:24px;
+    padding:16px 0;
+    border-top:1px solid var(--line);
+  }
+  .status-row:last-child{ border-bottom:1px solid var(--line); }
+  .status-row .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    padding:3px 0;
+    color:var(--ink-soft);
+  }
+  .status-row h4{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:0.95rem;
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .status-row p{ font-size:0.9rem; color:var(--ink-soft); margin:0; }
+  .pill{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.65rem;
+    padding:2px 8px;
+    border-radius:3px;
+    margin-left:8px;
+  }
+  .pill.done{ background:rgba(47,111,98,0.12); color:var(--steady-deep); }
+  .pill.progress{ background:rgba(184,134,58,0.15); color:var(--unsteady); }
+  .pill.planned{ background:var(--panel); color:var(--ink-soft); }
+
+  /* ---------- Footer ---------- */
+  footer{
+    padding:36px 0 48px;
+    border-top:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+  }
+
+  @media (max-width:760px){
+    .hero{ grid-template-columns:1fr; padding-top:40px; }
+    .hero h1{ font-size:2.1rem; max-width:none; }
+    .problem-grid{ grid-template-columns:1fr; gap:20px; }
+    .flow{ grid-template-columns:1fr; gap:24px; }
+    .flow-step:not(:last-child)::after{ display:none; }
+    .control-layout{ grid-template-columns:1fr; }
+    .status-row{ grid-template-columns:1fr; gap:6px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap topbar">
+  <div class="brand">TREMORSHIELD</div>
+  <nav>
+    <a href="#how">How it works</a>
+    <a href="#download">Download</a>
+    <!-- <a href="#status">Project status</a> -->
+  </nav>
+</div>
+
+<div class="wrap hero">
+  <div>
+    <!-- <span class="badge">Academic prototype — under active development</span> -->
+    <h1>A steadier line for an unsteady hand.</h1>
+    <p class="lede">TREMORSHIELD is a software-only cursor stabilizer for people with hand tremor. It watches how you move, tells intentional motion from tremor, and smooths the difference — no extra hardware required.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="#download">Download prototype build</a>
+      <a class="btn btn-ghost" href="#how">See how it works</a>
+    </div>
+    <!-- <p class="hero-note">Built for a college research project (Dept. of CSE). Not a certified medical device.</p> -->
+  </div>
+  <div class="demo-panel">
+    <svg viewBox="0 0 380 160" preserveAspectRatio="xMidYMid meet">
+      <path class="path-raw" d="M10,80 C 30,40 45,120 65,70 C 85,20 100,130 120,75 C 140,20 155,125 175,70 C 195,15 210,120 230,75 C 250,30 265,110 285,72 C 300,45 315,95 330,75" />
+      <path class="path-stable" d="M10,80 C 90,78 180,76 200,75 C 240,74 290,73 330,73" />
+    </svg>
+    <div class="demo-caption">
+      <span>raw pointer path</span>
+      <span>stabilized output</span>
+    </div>
+  </div>
+</div>
+
+<section id="problem">
+  <div class="wrap">
+    <p class="kicker">THE PROBLEM</p>
+    <h2>Small movements get in the way of everyday computer use.</h2>
+    <p class="section-lede">Hand tremor turns simple pointing, clicking, and dragging into repeated corrections. Most existing fixes ask for specialized hardware or apply the same fixed filter to every user and every task.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <h3>Fixed filtering</h3>
+        <p>A single filter setting can't tell a deliberate flick from a tremor spike, so it either over-smooths or under-corrects.</p>
+      </div>
+      <div class="problem-card">
+        <h3>No task awareness</h3>
+        <p>Navigating, clicking, and dragging need different amounts of assistance, but most tools treat every action the same.</p>
+      </div>
+      <div class="problem-card">
+        <h3>Hardware dependence</h3>
+        <p>Several assistive approaches rely on eye-tracking rigs or dedicated controllers rather than a standard mouse.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <p class="kicker">HOW IT WORKS</p>
+    <h2>Three stages between your hand and the pointer.</h2>
+    <p class="section-lede">Each stage runs on every movement, adjusting itself as your motion and task change.</p>
+    <div class="flow">
+      <div class="flow-step">
+        <span class="flow-num">01</span>
+        <h3>Adaptive filtering</h3>
+        <p>A self-adjusting filter estimates your true intended position from noisy raw input, updating its own sensitivity as conditions change.</p>
+      </div>
+      <div class="flow-step">
+        <span class="flow-num">02</span>
+        <h3>Confidence scoring</h3>
+        <p>A separate score reads your motion pattern to judge how deliberate the current movement looks, and how much help it needs.</p>
+      </div>
+      <div class="flow-step">
+        <span class="flow-num">03</span>
+        <h3>Smoothed output</h3>
+        <p>A lightweight smoothing pass blends the result into a steady, responsive cursor path without noticeable lag.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <p class="kicker">DOWNLOAD &amp; CONTROL — PREVIEW</p>
+    <h2>What using it will look like.</h2>
+    <p class="section-lede">The stabilization engine is still being built and validated — these two panels are an interface preview, not a live connection to a running app. Toggling them here doesn't turn anything on.</p>
+
+    <div class="control-layout">
+      <div>
+        <p class="mock-label">IN-APP TOGGLE</p>
+        <div class="app-window">
+          <div class="app-titlebar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span style="margin-left:6px;">tremorshield.exe</span>
+          </div>
+          <div class="app-body">
+            <div class="app-row">
+              <div>
+                <h3>Stabilization</h3>
+                <p>Applies to all pointer movement system-wide.</p>
+              </div>
+              <button class="switch" id="appSwitch" aria-pressed="false" aria-label="Toggle stabilization"></button>
+            </div>
+            <p class="status-line">status: <span class="status-value off" id="appStatus">off</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="mock-label">TASKBAR TOGGLE</p>
+        <div class="taskbar">
+          <span class="taskbar-left">Start</span>
+          <div class="tray">
+            <div class="tray-icon" id="trayIcon" tabindex="0" role="button" aria-pressed="false" aria-label="Toggle stabilization from tray">
+              <div class="tray-tooltip" id="trayTooltip">Stabilization: off — click to turn on</div>
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path id="trayGlyph" d="M4 16 C 7 8, 10 20, 13 12 C 16 5, 19 17, 20 10" stroke="#4B564E" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="tray-clock">14:02</span>
+          </div>
+        </div>
+        <p class="mockup-note">The tray icon mirrors whatever state the app window is in, same as any background utility.</p>
+      </div>
+    </div>
+
+    <!-- <div class="hero-ctas" style="margin-top:32px;">
+      <a class="btn btn-primary" href="#status">View current build status</a>
+    </div> -->
+  </div>
+</section>
+
+<!-- <section id="status">
+  <div class="wrap">
+    <p class="kicker">PROJECT STATUS</p>
+    <h2>Where this stands right now.</h2>
+    <p class="section-lede">Shown plainly, for reviewers and anyone evaluating the project.</p>
+    <div class="status-list">
+      <div class="status-row">
+        <div class="tag">Data collection<span class="pill done">in place</span></div>
+        <div>
+          <h4>Desktop &amp; web logging tools</h4>
+          <p>Mouse-tracking tasks (navigation, clicking, dragging, precision selection) are built and used to gather movement data from volunteers.</p>
+        </div>
+      </div>
+      <div class="status-row">
+        <div class="tag">Stabilization engine<span class="pill progress">in progress</span></div>
+        <div>
+          <h4>Adaptive filter + confidence scoring</h4>
+          <p>The filtering and confidence-scoring pipeline is being designed and implemented; it has not yet been tested end-to-end on live cursor input.</p>
+        </div>
+      </div>
+      <div class="status-row">
+        <div class="tag">Performance results<span class="pill planned">not yet available</span></div>
+        <div>
+          <h4>Accuracy &amp; stability numbers</h4>
+          <p>No experimental results exist yet. Any figures shown elsewhere are design targets, not measured outcomes.</p>
+        </div>
+      </div>
+      <div class="status-row">
+        <div class="tag">Clinical testing<span class="pill planned">phase II</span></div>
+        <div>
+          <h4>Testing with motor-impaired users</h4>
+          <p>Current data comes from healthy volunteers with synthetic tremor added. Testing with clinical populations is planned for a later phase.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+<!-- <footer class="wrap">
+  <span>TREMORSHIELD — Adaptive Cursor Stabilization, Module 3</span>
+  <span>Cereena George · MUT23CS047 · Guide: Dr. Sheena Kurian K.</span>
+</footer> -->
+
+<script>
+  (function(){
+    var appSwitch = document.getElementById('appSwitch');
+    var appStatus = document.getElementById('appStatus');
+    var trayIcon = document.getElementById('trayIcon');
+    var trayTooltip = document.getElementById('trayTooltip');
+    var trayGlyph = document.getElementById('trayGlyph');
+
+    function setState(on){
+      appSwitch.setAttribute('aria-pressed', on);
+      trayIcon.setAttribute('aria-pressed', on);
+      appStatus.textContent = on ? 'on' : 'off';
+      appStatus.classList.toggle('off', !on);
+      trayIcon.classList.toggle('on', on);
+      trayTooltip.textContent = on
+        ? 'Stabilization: on — click to turn off'
+        : 'Stabilization: off — click to turn on';
+      trayGlyph.setAttribute('stroke', on ? '#2F6F62' : '#4B564E');
+      trayGlyph.setAttribute('d', on
+        ? 'M4 13 C 8 12, 12 13, 16 12.5 C 18 12.3, 19 12.6, 20 12'
+        : 'M4 16 C 7 8, 10 20, 13 12 C 16 5, 19 17, 20 10');
+    }
+
+    appSwitch.addEventListener('click', function(){
+      setState(appSwitch.getAttribute('aria-pressed') !== 'true');
+    });
+    trayIcon.addEventListener('click', function(){
+      setState(trayIcon.getAttribute('aria-pressed') !== 'true');
+    });
+    trayIcon.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        setState(trayIcon.getAttribute('aria-pressed') !== 'true');
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -31,6 +31,8 @@ from sklearn.metrics import (
 )
 import html
 import re
+from sklearn.svm import LinearSVC
+from sklearn.preprocessing import StandardScaler
 
 # ============================================================
 # 1. LOAD DATASETS
@@ -40,8 +42,8 @@ print("="*80)
 print("LOADING DATASETS")
 print("="*80)
 
-train_df = pd.read_csv("data/robustpdx/train_ml_features.csv")
-test_df = pd.read_csv("data/robustpdx/test_ml_features.csv")
+train_df = pd.read_csv("models/robustpdx/train_ml_features.csv")
+test_df = pd.read_csv("models/robustpdx/test_ml_features.csv")
 
 # Clean column names
 def clean_column_name(col):
@@ -180,18 +182,30 @@ models_config = {
             n_jobs=-1
         ))
     ]),
-    "SVM": Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("classifier", SVC(
-            kernel='linear',
-            C=0.5,
-            probability=False,
-            random_state=42,
-            class_weight='balanced',
-            shrinking=True,
-            decision_function_shape='ovr'
-        ))
-    ]),
+
+"SVM": Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler()),
+    ("classifier", LinearSVC(
+        C=0.5,
+        class_weight="balanced",
+        random_state=42,
+        max_iter=5000
+    ))
+]),
+
+    # "SVM": Pipeline([
+    #     ("imputer", SimpleImputer(strategy="median")),
+    #     ("classifier", SVC(
+    #         kernel='linear',
+    #         C=0.5,
+    #         probability=True,
+    #         random_state=42,
+    #         class_weight='balanced',
+    #         shrinking=True,
+    #         decision_function_shape='ovr'
+    #     ))
+    # ]),
     "Random Forest": Pipeline([
         ("imputer", SimpleImputer(strategy="median")),
         ("classifier", RandomForestClassifier(
