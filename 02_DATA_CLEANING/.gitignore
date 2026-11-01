@@ -1,0 +1,23 @@
+# Ignore everything in the root directory
+/*
+
+# Allow the .gitignore file
+!/.gitignore
+
+# Allow scripts folder
+!/scripts/
+
+# Ignore everything inside scripts
+/scripts/*
+
+# Allow only final_clean.py
+!/scripts/final_clean.py
+
+# Allow data folder
+!/data/
+
+# Ignore everything inside data
+/data/*
+
+# Allow placeholder to keep data folder in Git
+!/data/.gitkeep
