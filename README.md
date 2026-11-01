@@ -1,4 +1,4 @@
-# TremorShield 🖱️
+# TremorShield 🖱️🛡️
 
 ### An Adaptive Context-Aware Cursor Stabilization Framework
 
