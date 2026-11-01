@@ -177,6 +177,11 @@ Validation includes:
 
 RobustPDX reference data is used for movement and spatial validation where available. This does not make Parkinson's disease diagnosis or prediction a function of TremorShield.
 
+We acknowledge the creators of the **RobustPDx dataset** for making their research and data available to the research community. The dataset is used in TremorShield as a reference for movement and spatial validation.
+
+**Reference:** Tumpa et al. (2026), *RobustPDx: A Structured Web-Based Parkinson’s Assessment Dataset and Benchmark for AI Robustness to Device Type and Handedness*, Scientific Data. https://doi.org/10.1038/s41597-026-08118-x
+
+
 ### 05. Machine Learning Models
 
 This phase develops machine learning models to identify the user's current mouse interaction context.
